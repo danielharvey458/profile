@@ -95,6 +95,36 @@ namespace pt_profile
       return *(reinterpret_cast<uint64_t*> (&regs)
                  + std::distance (register_descriptors.begin (), it));
     }
+
+    void set_register (pid_t pid, Register reg, uint64_t value)
+    {
+      user_regs_struct regs;
+      ptrace (PTRACE_GETREGS, pid, nullptr, &regs);
+
+      const auto it = std::find_if (register_descriptors.begin (),
+                                    register_descriptors.end (),
+                                    [&] (auto &&descriptor)
+                                    {
+                                      return descriptor.reg == reg;
+                                    });
+
+      const auto offset = std::distance (register_descriptors.begin (), it);
+
+      *(reinterpret_cast<uint64_t*> (&regs) + offset) = value;
+
+      ptrace (PTRACE_SETREGS, pid, nullptr, &regs);
+    }
+
+    Register register_from_name (const std::string &name)
+    {
+      const auto it = std::find_if (register_descriptors.begin (),
+                                    register_descriptors.end (),
+                                    [&] (const RegisterDescriptor &r)
+                                    {
+                                      return r.name == name;
+                                    });
+      return it->reg;
+    }
   }
 
   Debugger::Debugger (std::string program_name, pid_t pid)
@@ -154,7 +184,20 @@ namespace pt_profile
     {
       const auto op = tokenizer.next ();
 
-      if (op == "read")
+      const auto print_register = [&] (const RegisterDescriptor &desc)
+      {
+        std::cout << desc.name << " 0x"
+                  << std::hex << get_register (m_pid, desc.reg)
+                  << '\n';
+      };
+
+      if (op == "dump")
+      {
+        std::for_each (register_descriptors.begin (),
+                       register_descriptors.end (),
+                       print_register);
+      }
+      else if (op == "read")
       {
         const auto name = tokenizer.next ();
 
@@ -173,8 +216,15 @@ namespace pt_profile
         }
         else
         {
-          std::cout << register_it->name << " " << std::hex << get_register (m_pid, register_it->reg) << std::endl;
+          print_register (*register_it);
         }
+      }
+      else if (op == "write")
+      {
+        const auto name = tokenizer.next ();
+        const auto value = std::stoull (tokenizer.next (), nullptr, 16);
+        const auto reg = register_from_name (name);
+        set_register (m_pid, reg, value);
       }
       else
       {
