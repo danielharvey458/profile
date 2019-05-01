@@ -62,14 +62,6 @@ namespace pt_profile
   {
   }
 
-  void Debugger::continue_execution ()
-  {
-    ptrace (PTRACE_CONT, m_pid, nullptr, nullptr);
-    int wait_status;
-    auto options = 0;
-    waitpid (m_pid, &wait_status, options);
-  }
-
   void Debugger::set_breakpoint (std::intptr_t address)
   {
     const auto [it, set]
@@ -85,6 +77,58 @@ namespace pt_profile
     }
     else
     {
+      it->second.enable ();
+    }
+  }
+
+  void Debugger::write_memory (uint64_t address, uint64_t value)
+  {
+    ptrace (PTRACE_POKEDATA, m_pid, address, &value);
+  }
+
+  uint64_t Debugger::read_memory (uint64_t address) const
+  {
+    return ptrace (PTRACE_PEEKDATA, m_pid, address, nullptr);
+  }
+
+  uint64_t Debugger::get_pc () const
+  {
+    return get_register (m_pid, Registers::RIP);
+  }
+
+  void Debugger::set_pc (const int64_t pc)
+  {
+    set_register (m_pid, Registers::RIP, pc);
+  }
+
+  void Debugger::wait_for_signal ()
+  {
+    auto wait_status = 0;
+    auto options = 0;
+    waitpid (m_pid, &wait_status, options);
+  }
+
+  void Debugger::continue_execution ()
+  {
+    step_over_breakpoint ();
+    ptrace (PTRACE_CONT, m_pid, nullptr, nullptr);
+    wait_for_signal ();
+  }
+
+  void Debugger::step_over_breakpoint ()
+  {
+    const auto breakpoint = get_pc () - 1;
+
+    const auto virtual_address = breakpoint - m_virtual_offset;
+
+    const auto it = m_breakpoints.find (virtual_address);
+
+    if (it != m_breakpoints.end () && it->second.is_enabled ())
+    {
+      set_pc (breakpoint);
+      it->second.disable ();
+      ptrace (PTRACE_SINGLESTEP, m_pid, nullptr, nullptr);
+      wait_for_signal ();
       it->second.enable ();
     }
   }
@@ -151,6 +195,20 @@ namespace pt_profile
         std::cerr << "Unrecognised operation '" << op << "'\n";
       }
     }
+    else if (leader == "memory")
+    {
+      const auto op = tokenizer.next ();
+      const auto address = std::stoull (tokenizer.next (), nullptr, 16);
+      if (op == "read")
+      {
+        std::cout << std::hex << "Ox" << read_memory (address) << std::endl;
+      }
+      else if (op == "write")
+      {
+        const auto value = std::stoull (tokenizer.next (), nullptr, 16);
+        write_memory (address, value);
+      }
+    }
     else
     {
       std::cerr << "Unrecognised command '" << command << "'\n";
@@ -159,10 +217,7 @@ namespace pt_profile
 
   void Debugger::run ()
   {
-    int wait_status = 0;
-    auto options = 0;
-
-    waitpid (m_pid, &wait_status, options);
+    wait_for_signal ();
 
     char *line = nullptr;
 
