@@ -30,18 +30,14 @@ namespace pt_profile
       return std::stol (line.c_str (), nullptr, 16);
     }
 
-
     uint64_t get_register (pid_t pid, Registers::Register reg)
     {
       user_regs_struct regs;
       ptrace (PTRACE_GETREGS, pid, nullptr, &regs);
-      /*
-       * TODO Move this into a class of its own
-       */
+
       const auto it = Registers::from_register (reg);
 
-      return *(reinterpret_cast<uint64_t*> (&regs)
-                 + std::distance (Registers::begin (), it));
+      return *Registers::lookup_user_regs (regs, it);
     }
 
     void set_register (pid_t pid, Registers::Register reg, uint64_t value)
@@ -53,7 +49,7 @@ namespace pt_profile
 
       const auto offset = std::distance (Registers::begin (), it);
 
-      *(reinterpret_cast<uint64_t*> (&regs) + offset) = value;
+      *Registers::lookup_user_regs (regs, it) = value;
 
       ptrace (PTRACE_SETREGS, pid, nullptr, &regs);
     }

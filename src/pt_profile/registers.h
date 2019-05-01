@@ -1,6 +1,8 @@
 #ifndef PT_PROFILE_REGISTERS_H
 #define PT_PROFILE_REGISTERS_H
 
+#include <sys/user.h>
+
 #include <array>
 
 namespace pt_profile
@@ -49,6 +51,12 @@ namespace pt_profile
       static const_iterator from_dwarf_register (int dwarf_register);
 
       static const_iterator from_register (Register reg);
+
+      static uint64_t *
+      lookup_user_regs (user_regs_struct &regs, const_iterator it);
+
+      static const uint64_t *
+      lookup_user_regs (const user_regs_struct &regs, const_iterator it);
   };
 }
 

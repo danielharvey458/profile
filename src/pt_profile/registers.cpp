@@ -66,4 +66,18 @@ namespace pt_profile
     const auto pred = [reg] (const auto &d) {return d.reg == reg;};
     return std::find_if (begin (), end (), pred);
   }
+
+  uint64_t *
+  Registers::lookup_user_regs (user_regs_struct &regs,
+                               const_iterator it)
+  {
+    return reinterpret_cast<uint64_t*> (&regs) + std::distance (begin (), it);
+  }
+
+  const uint64_t *
+  Registers::lookup_user_regs (const user_regs_struct &regs,
+                               const_iterator it)
+  {
+    return reinterpret_cast<const uint64_t*> (&regs) + std::distance (begin (), it);
+  }
 }
