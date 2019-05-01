@@ -1,5 +1,6 @@
 #include "pt_profile/debugger.h"
 #include "pt_profile/tokenizer.h"
+#include "pt_profile/registers.h"
 
 #include "linenoise.h"
 
@@ -29,101 +30,32 @@ namespace pt_profile
       return std::stol (line.c_str (), nullptr, 16);
     }
 
-    enum class Register
-    {
-      R15, R14, R13, R12, RBP, RBX,
-      R11, R10,  R9,  R8, RAX, RCX,
-      RDX, RSI, RDI, ORIG_RAX, RIP,
-      CS,  RFLAGS,   RSP,  SS, FS_BASE,
-      GS_BASE, DS, ES, FS, GS
-    };
 
-    constexpr std::size_t registers_count = 27;
-
-    struct RegisterDescriptor
-    {
-      Register reg;
-      int dwarf_register;
-      std::string name;
-    };
-
-    const std::array<RegisterDescriptor, registers_count> register_descriptors
-    {{
-       {Register::R15, 15, "r15"},
-       {Register::R14, 14, "r14"},
-       {Register::R13, 13, "r13"},
-       {Register::R12, 12, "r12"},
-       {Register::RBP,  6, "rbp"},
-       {Register::RBX,  3, "rbx"},
-       {Register::R11, 11, "r11"},
-       {Register::R10, 10, "r10"},
-       {Register::R9,   9,  "r9"},
-       {Register::R8,   8,  "r8"},
-       {Register::RAX,  0, "rax"},
-       {Register::RCX,  2, "rcx"},
-       {Register::RDX,  1, "rdx"},
-       {Register::RSI,  4, "rsi"},
-       {Register::RDI,  5, "rdi"},
-       {Register::ORIG_RAX,  -1, "orig_rax"},
-       {Register::RIP,  -1, "rip"},
-       {Register::CS,  51, "cs"},
-       {Register::RFLAGS,  49, "eflags"},
-       {Register::RSP,  7, "rsp"},
-       {Register::SS,  52, "ss"},
-       {Register::FS_BASE,  58, "fs_base"},
-       {Register::GS_BASE,  59, "gs_base"},
-       {Register::DS,  53, "ds"},
-       {Register::ES,  50, "es"},
-       {Register::FS,  54, "fs"},
-       {Register::GS,  55, "gs"},
-    }};
-
-    uint64_t get_register (pid_t pid, Register reg)
+    uint64_t get_register (pid_t pid, Registers::Register reg)
     {
       user_regs_struct regs;
       ptrace (PTRACE_GETREGS, pid, nullptr, &regs);
       /*
        * TODO Move this into a class of its own
        */
-      const auto it = std::find_if (register_descriptors.begin (),
-                                    register_descriptors.end (),
-                                    [&] (auto &&descriptor)
-                                    {
-                                      return descriptor.reg == reg;
-                                    });
+      const auto it = Registers::from_register (reg);
 
       return *(reinterpret_cast<uint64_t*> (&regs)
-                 + std::distance (register_descriptors.begin (), it));
+                 + std::distance (Registers::begin (), it));
     }
 
-    void set_register (pid_t pid, Register reg, uint64_t value)
+    void set_register (pid_t pid, Registers::Register reg, uint64_t value)
     {
       user_regs_struct regs;
       ptrace (PTRACE_GETREGS, pid, nullptr, &regs);
 
-      const auto it = std::find_if (register_descriptors.begin (),
-                                    register_descriptors.end (),
-                                    [&] (auto &&descriptor)
-                                    {
-                                      return descriptor.reg == reg;
-                                    });
+      const auto it = Registers::from_register (reg);
 
-      const auto offset = std::distance (register_descriptors.begin (), it);
+      const auto offset = std::distance (Registers::begin (), it);
 
       *(reinterpret_cast<uint64_t*> (&regs) + offset) = value;
 
       ptrace (PTRACE_SETREGS, pid, nullptr, &regs);
-    }
-
-    Register register_from_name (const std::string &name)
-    {
-      const auto it = std::find_if (register_descriptors.begin (),
-                                    register_descriptors.end (),
-                                    [&] (const RegisterDescriptor &r)
-                                    {
-                                      return r.name == name;
-                                    });
-      return it->reg;
     }
   }
 
@@ -184,7 +116,7 @@ namespace pt_profile
     {
       const auto op = tokenizer.next ();
 
-      const auto print_register = [&] (const RegisterDescriptor &desc)
+      const auto print_register = [&] (const Registers::Descriptor &desc)
       {
         std::cout << desc.name << " 0x"
                   << std::hex << get_register (m_pid, desc.reg)
@@ -193,23 +125,15 @@ namespace pt_profile
 
       if (op == "dump")
       {
-        std::for_each (register_descriptors.begin (),
-                       register_descriptors.end (),
-                       print_register);
+        std::for_each (Registers::begin (), Registers::end (), print_register);
       }
       else if (op == "read")
       {
         const auto name = tokenizer.next ();
 
-        const auto register_it
-          = std::find_if (register_descriptors.begin (),
-                          register_descriptors.end (),
-                          [&] (auto &&descriptor)
-                          {
-                            return descriptor.name == name;
-                          });
+        const auto register_it = Registers::from_name (name);
 
-        if (register_it == register_descriptors.end ())
+        if (register_it == Registers::end ())
         {
           std::cerr << "No such register '" << name << "'" << std::endl;
           return;
@@ -223,8 +147,8 @@ namespace pt_profile
       {
         const auto name = tokenizer.next ();
         const auto value = std::stoull (tokenizer.next (), nullptr, 16);
-        const auto reg = register_from_name (name);
-        set_register (m_pid, reg, value);
+        const auto reg = Registers::from_name (name);
+        set_register (m_pid, reg->reg, value);
       }
       else
       {
