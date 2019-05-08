@@ -47,8 +47,6 @@ namespace pt_profile
 
       const auto it = Registers::from_register (reg);
 
-      const auto offset = std::distance (Registers::begin (), it);
-
       *Registers::lookup_user_regs (regs, it) = value;
 
       ptrace (PTRACE_SETREGS, pid, nullptr, &regs);
