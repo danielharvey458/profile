@@ -10,6 +10,8 @@ namespace pt_profile
   {
     public:
 
+      Breakpoint () = default;
+
       explicit Breakpoint (pid_t pid, std::intptr_t address);
 
       void enable ();
@@ -21,10 +23,10 @@ namespace pt_profile
       std::intptr_t address () const { return m_address; }
 
     private:
-      pid_t m_pid;
-      std::intptr_t m_address;
-      bool m_enabled;
-      uint8_t m_saved_data;
+      pid_t m_pid = {};
+      std::intptr_t m_address = {};
+      bool m_enabled = {};
+      uint8_t m_saved_data = {};
   };
 }
 

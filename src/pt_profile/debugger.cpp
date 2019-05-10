@@ -60,23 +60,18 @@ namespace pt_profile
   {
   }
 
-  void Debugger::set_breakpoint (std::intptr_t address)
+  void Debugger::set_measure (std::intptr_t begin_address,
+                              std::intptr_t end_address)
   {
-    const auto [it, set]
-      = m_breakpoints.emplace (address, Breakpoint (m_pid, m_virtual_offset + address));
+    m_counters.push_back (perf_event::PerformanceCounter (PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES, m_pid));
 
-    if (!set)
-    {
-      /*
-       * FIXME no cout/cerr in library.
-       */
-      std::cerr << "Breakpoint already set at 0x" << std::hex
-                << address << "\n";
-    }
-    else
-    {
-      it->second.enable ();
-    }
+    m_measure_points.emplace (
+          begin_address,
+          MeasurePoint {Breakpoint (m_pid, m_virtual_offset + begin_address), MeasurePoint::BEGIN, &m_counters.back ()})->second.breakpoint.enable ();
+
+    m_measure_points.emplace (
+          end_address,
+          MeasurePoint {Breakpoint (m_pid, m_virtual_offset + end_address), MeasurePoint::END, &m_counters.back ()})->second.breakpoint.enable ();
   }
 
   void Debugger::write_memory (uint64_t address, uint64_t value)
@@ -119,15 +114,29 @@ namespace pt_profile
 
     const auto virtual_address = breakpoint - m_virtual_offset;
 
-    const auto it = m_breakpoints.find (virtual_address);
+    const auto [begin, end] = m_measure_points.equal_range (virtual_address);
 
-    if (it != m_breakpoints.end () && it->second.is_enabled ())
+    for (auto it = begin; it != end; ++it)
     {
-      set_pc (breakpoint);
-      it->second.disable ();
-      ptrace (PTRACE_SINGLESTEP, m_pid, nullptr, nullptr);
-      wait_for_signal ();
-      it->second.enable ();
+      if (it->second.breakpoint.is_enabled ())
+      {
+        if (it->second.begin_end == MeasurePoint::BEGIN)
+        {
+          it->second.counter->reset ();
+          it->second.counter->enable ();
+        }
+        else
+        {
+          std::cout << "Counter " << it->second.counter->get () << std::endl;
+          it->second.counter->disable ();
+        }
+
+        set_pc (breakpoint);
+        it->second.breakpoint.disable ();
+        ptrace (PTRACE_SINGLESTEP, m_pid, nullptr, nullptr);
+        wait_for_signal ();
+        it->second.breakpoint.enable ();
+      }
     }
   }
 
@@ -141,14 +150,20 @@ namespace pt_profile
     {
       continue_execution ();
     }
-    else if (leader == "break")
+    else if (leader == "measure")
     {
-      const auto address
+      const auto begin_address
        = std::strtol (tokenizer.next ().c_str (),
                       nullptr,
                       16);
 
-      set_breakpoint (address);
+      const auto end_address
+       = std::strtol (tokenizer.next ().c_str (),
+                      nullptr,
+                      16);
+
+
+      set_measure (begin_address, end_address);
     }
     else if (leader == "register")
     {

@@ -1,12 +1,17 @@
 #ifndef PT_PROFILE_DEBUGGER_H
 #define PT_PROFILE_DEBUGGER_H
 
-#include "pt_profile/breakpoint.h"
+#include "perf_event/perf_event.h"
 
-#include <sys/types.h>
-#include <cstdint>
-#include <unordered_map>
+#include "pt_profile/breakpoint.h"
+#include "pt_profile/measure_point.h"
+
+#include <list>
 #include <string>
+#include <unordered_map>
+
+#include <cstdint>
+#include <sys/types.h>
 
 namespace pt_profile
 {
@@ -21,7 +26,7 @@ namespace pt_profile
     private:
 
       void continue_execution ();
-      void set_breakpoint (std::intptr_t address);
+      void set_measure (std::intptr_t begin_address, std::intptr_t end_address);
       void handle_command (const std::string &command);
       void write_memory (uint64_t address, uint64_t value);
       uint64_t read_memory (uint64_t address) const;
@@ -34,7 +39,8 @@ namespace pt_profile
       std::string m_program_name;
       pid_t m_pid;
       std::intptr_t m_virtual_offset;
-      std::unordered_map<std::intptr_t, Breakpoint> m_breakpoints;
+      std::unordered_multimap<std::intptr_t, MeasurePoint> m_measure_points;
+      std::list<perf_event::PerformanceCounter> m_counters;
   };
 }
 
