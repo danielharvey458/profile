@@ -23,17 +23,19 @@ namespace pt_profile
 
       void run ();
 
+      void set_measure (std::intptr_t begin_address,
+                        std::intptr_t end_address);
+
     private:
 
-      void continue_execution ();
-      void set_measure (std::intptr_t begin_address, std::intptr_t end_address);
+      bool continue_execution ();
       void handle_command (const std::string &command);
       void write_memory (uint64_t address, uint64_t value);
       uint64_t read_memory (uint64_t address) const;
       uint64_t get_pc () const;
       void set_pc (int64_t pc);
       void step_over_breakpoint ();
-      void wait_for_signal ();
+      bool wait_for_signal ();
 
 
       std::string m_program_name;

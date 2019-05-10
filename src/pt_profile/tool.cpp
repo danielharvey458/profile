@@ -10,13 +10,13 @@ int main (int argc, char **argv)
 {
   using namespace pt_profile;
 
-  if (argc < 1)
+  if (argc != 4)
   {
-    std::cerr << "Program not specified" << std::endl;
+    std::cerr << "Usage: " << argv[0] << " START END PROGRAM" << std::endl;
     return EXIT_FAILURE;
   }
 
-  const auto prog = argv[1]; 
+  const auto prog = argv[3];
   const auto pid = fork ();
 
   if (pid == 0)
@@ -27,6 +27,8 @@ int main (int argc, char **argv)
   else if (pid >= 1)
   {
     auto dbg = Debugger (prog, pid);
+    dbg.set_measure (std::strtol (argv[1], nullptr, 16),
+                     std::strtol (argv[2], nullptr, 16));
     dbg.run ();
   }
 }

@@ -63,7 +63,7 @@ namespace pt_profile
   void Debugger::set_measure (std::intptr_t begin_address,
                               std::intptr_t end_address)
   {
-    m_counters.push_back (perf_event::PerformanceCounter (PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES, m_pid));
+    m_counters.push_back (perf_event::PerformanceCounter (PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES, m_pid));
 
     m_measure_points.emplace (
           begin_address,
@@ -94,18 +94,19 @@ namespace pt_profile
     set_register (m_pid, Registers::RIP, pc);
   }
 
-  void Debugger::wait_for_signal ()
+  bool Debugger::wait_for_signal ()
   {
     auto wait_status = 0;
     auto options = 0;
     waitpid (m_pid, &wait_status, options);
+    return !WIFEXITED (wait_status);
   }
 
-  void Debugger::continue_execution ()
+  bool Debugger::continue_execution ()
   {
     step_over_breakpoint ();
     ptrace (PTRACE_CONT, m_pid, nullptr, nullptr);
-    wait_for_signal ();
+    return wait_for_signal ();
   }
 
   void Debugger::step_over_breakpoint ()
@@ -127,7 +128,6 @@ namespace pt_profile
         }
         else
         {
-          std::cout << "Counter " << it->second.counter->get () << std::endl;
           it->second.counter->disable ();
         }
 
@@ -229,16 +229,12 @@ namespace pt_profile
   }
 
   void Debugger::run ()
-  {
-    wait_for_signal ();
+  { 
+    while (continue_execution ()) {}
 
-    char *line = nullptr;
-
-    while ((line = linenoise ("mindbg> ")) != nullptr)
+    for (const auto &counter : m_counters)
     {
-      handle_command (line);
-      linenoiseHistoryAdd (line);
-      linenoiseFree (line);
+     std::cout << "Instructions " << counter.get () << std::endl;
     }
   }
 }
