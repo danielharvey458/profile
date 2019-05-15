@@ -28,7 +28,6 @@ namespace pt_profile
     private:
 
       bool continue_execution ();
-      void handle_command (const std::string &command);
       void write_memory (uint64_t address, uint64_t value);
       uint64_t read_memory (uint64_t address) const;
       uint64_t get_pc () const;

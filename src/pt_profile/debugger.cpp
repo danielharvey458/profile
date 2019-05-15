@@ -140,101 +140,13 @@ namespace pt_profile
     }
   }
 
-  void Debugger::handle_command (const std::string &command)
-  {
-    auto tokenizer = Tokenizer (command, ' ');
-
-    const auto leader = tokenizer.next ();
-
-    if (leader == "continue")
-    {
-      continue_execution ();
-    }
-    else if (leader == "measure")
-    {
-      const auto begin_address
-       = std::strtol (tokenizer.next ().c_str (),
-                      nullptr,
-                      16);
-
-      const auto end_address
-       = std::strtol (tokenizer.next ().c_str (),
-                      nullptr,
-                      16);
-
-
-      set_measure (begin_address, end_address);
-    }
-    else if (leader == "register")
-    {
-      const auto op = tokenizer.next ();
-
-      const auto print_register = [&] (const Registers::Descriptor &desc)
-      {
-        std::cout << desc.name << " 0x"
-                  << std::hex << get_register (m_pid, desc.reg)
-                  << '\n';
-      };
-
-      if (op == "dump")
-      {
-        std::for_each (Registers::begin (), Registers::end (), print_register);
-      }
-      else if (op == "read")
-      {
-        const auto name = tokenizer.next ();
-
-        const auto register_it = Registers::from_name (name);
-
-        if (register_it == Registers::end ())
-        {
-          std::cerr << "No such register '" << name << "'" << std::endl;
-          return;
-        }
-        else
-        {
-          print_register (*register_it);
-        }
-      }
-      else if (op == "write")
-      {
-        const auto name = tokenizer.next ();
-        const auto value = std::stoull (tokenizer.next (), nullptr, 16);
-        const auto reg = Registers::from_name (name);
-        set_register (m_pid, reg->reg, value);
-      }
-      else
-      {
-        std::cerr << "Unrecognised operation '" << op << "'\n";
-      }
-    }
-    else if (leader == "memory")
-    {
-      const auto op = tokenizer.next ();
-      const auto address = std::stoull (tokenizer.next (), nullptr, 16);
-      if (op == "read")
-      {
-        std::cout << std::hex << "Ox" << read_memory (address) << std::endl;
-      }
-      else if (op == "write")
-      {
-        const auto value = std::stoull (tokenizer.next (), nullptr, 16);
-        write_memory (address, value);
-      }
-    }
-    else
-    {
-      std::cerr << "Unrecognised command '" << command << "'\n";
-    }
-  }
-
   void Debugger::run ()
-  { 
+  {
     while (continue_execution ()) {}
 
     for (const auto &counter : m_counters)
     {
-     std::cout << "Instructions " << counter.get () << std::endl;
+      std::cout << "Instructions " << counter.get () << std::endl;
     }
   }
 }
