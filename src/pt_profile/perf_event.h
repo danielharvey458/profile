@@ -20,11 +20,11 @@ namespace pt_profile
 
       ~PerformanceCounter ();
 
-      void enable ();
+      void start ();
+
+      void stop ();
 
       void reset ();
-
-      void disable ();
 
       long get () const;
 

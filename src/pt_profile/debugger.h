@@ -2,10 +2,9 @@
 #define PT_PROFILE_DEBUGGER_H
 
 #include "pt_profile/breakpoint.h"
-#include "pt_profile/measure_point.h"
 #include "pt_profile/perf_event.h"
 
-#include <list>
+#include <deque>
 #include <string>
 #include <unordered_map>
 
@@ -35,12 +34,25 @@ namespace pt_profile
       void step_over_breakpoint ();
       bool wait_for_signal ();
 
-
       std::string m_program_name;
       pid_t m_pid;
       std::intptr_t m_virtual_offset;
-      std::unordered_multimap<std::intptr_t, MeasurePoint> m_measure_points;
-      std::list<PerformanceCounter> m_counters;
+
+      struct CounterHandle
+      {
+        enum start_stop_t : bool
+        {
+          START,
+          STOP
+        };
+
+        PerformanceCounter *counter;
+        start_stop_t start_stop;
+      };
+
+      std::unordered_map<std::intptr_t, Breakpoint> m_breakpoints;
+      std::unordered_multimap<std::intptr_t, CounterHandle> m_measure_points;
+      std::deque<PerformanceCounter> m_counters;
   };
 }
 

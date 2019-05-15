@@ -63,15 +63,28 @@ namespace pt_profile
   void Debugger::set_measure (std::intptr_t begin_address,
                               std::intptr_t end_address)
   {
-    m_counters.push_back (PerformanceCounter (PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES, m_pid));
+    const auto perf_counter_it
+      = m_counters.emplace (
+          m_counters.end (),
+          PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, m_pid);
+
+    m_breakpoints.emplace (
+        begin_address,
+        Breakpoint (m_pid, begin_address + m_virtual_offset))
+          .first->second.enable ();
 
     m_measure_points.emplace (
           begin_address,
-          MeasurePoint {Breakpoint (m_pid, m_virtual_offset + begin_address), MeasurePoint::BEGIN, &m_counters.back ()})->second.breakpoint.enable ();
+          CounterHandle {&*perf_counter_it, CounterHandle::START});
+
+    m_breakpoints.emplace (
+        end_address,
+        Breakpoint (m_pid, end_address + m_virtual_offset))
+          .first->second.enable ();
 
     m_measure_points.emplace (
           end_address,
-          MeasurePoint {Breakpoint (m_pid, m_virtual_offset + end_address), MeasurePoint::END, &m_counters.back ()})->second.breakpoint.enable ();
+          CounterHandle {&*perf_counter_it, CounterHandle::STOP});
   }
 
   void Debugger::write_memory (uint64_t address, uint64_t value)
@@ -115,28 +128,38 @@ namespace pt_profile
 
     const auto virtual_address = breakpoint - m_virtual_offset;
 
-    const auto [begin, end] = m_measure_points.equal_range (virtual_address);
+    /*
+     * Find the breakpoint that we have hit
+     */
+    const auto breakpoint_it = m_breakpoints.find (virtual_address);
 
-    for (auto it = begin; it != end; ++it)
+    if (breakpoint_it != m_breakpoints.end () &&
+        breakpoint_it->second.is_enabled ())
     {
-      if (it->second.breakpoint.is_enabled ())
+      /*
+       * Toggle all measure points.
+       */
+      const auto [begin, end] = m_measure_points.equal_range (virtual_address);
+      for (auto it = begin; it != end; ++it)
       {
-        if (it->second.begin_end == MeasurePoint::BEGIN)
+        if (it->second.start_stop == CounterHandle::START)
         {
-          it->second.counter->reset ();
-          it->second.counter->enable ();
+          it->second.counter->start ();
         }
         else
         {
-          it->second.counter->disable ();
+          it->second.counter->stop ();
         }
-
-        set_pc (breakpoint);
-        it->second.breakpoint.disable ();
-        ptrace (PTRACE_SINGLESTEP, m_pid, nullptr, nullptr);
-        wait_for_signal ();
-        it->second.breakpoint.enable ();
       }
+
+      /*
+       * Step over the breakpoint
+       */
+      set_pc (breakpoint);
+      breakpoint_it->second.disable ();
+      ptrace (PTRACE_SINGLESTEP, m_pid, nullptr, nullptr);
+      wait_for_signal ();
+      breakpoint_it->second.enable ();
     }
   }
 
