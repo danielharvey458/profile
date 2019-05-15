@@ -66,7 +66,17 @@ namespace pt_profile
     const auto perf_counter_it
       = m_counters.emplace (
           m_counters.end (),
-          PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, m_pid);
+          AddressedCounter
+          {
+            begin_address,
+            end_address,
+            PerformanceCounter
+            {
+              PERF_TYPE_HARDWARE,
+              PERF_COUNT_HW_INSTRUCTIONS,
+              m_pid
+            }
+          });
 
     m_breakpoints.emplace (
         begin_address,
@@ -75,7 +85,7 @@ namespace pt_profile
 
     m_measure_points.emplace (
           begin_address,
-          CounterHandle {&*perf_counter_it, CounterHandle::START});
+          CounterHandle {&perf_counter_it->counter, CounterHandle::START});
 
     m_breakpoints.emplace (
         end_address,
@@ -84,7 +94,7 @@ namespace pt_profile
 
     m_measure_points.emplace (
           end_address,
-          CounterHandle {&*perf_counter_it, CounterHandle::STOP});
+          CounterHandle {&perf_counter_it->counter, CounterHandle::STOP});
   }
 
   void Debugger::write_memory (uint64_t address, uint64_t value)
@@ -169,7 +179,13 @@ namespace pt_profile
 
     for (const auto &counter : m_counters)
     {
-      std::cout << "Instructions " << counter.get () << std::endl;
+      std::cerr << std::hex
+                << "0x" << counter.start
+                << "--"
+                << "0x" << counter.end
+                << ": "
+                << std::dec
+                << counter.counter.get () << std::endl;
     }
   }
 }

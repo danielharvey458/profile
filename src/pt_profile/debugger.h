@@ -52,7 +52,14 @@ namespace pt_profile
 
       std::unordered_map<std::intptr_t, Breakpoint> m_breakpoints;
       std::unordered_multimap<std::intptr_t, CounterHandle> m_measure_points;
-      std::deque<PerformanceCounter> m_counters;
+      struct AddressedCounter
+      {
+        std::intptr_t start = {};
+        std::intptr_t end = {};
+        PerformanceCounter counter;
+      };
+
+      std::deque<AddressedCounter> m_counters;
   };
 }
 
