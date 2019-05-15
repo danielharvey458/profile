@@ -1,10 +1,9 @@
 #ifndef PT_PROFILE_DEBUGGER_H
 #define PT_PROFILE_DEBUGGER_H
 
-#include "perf_event/perf_event.h"
-
 #include "pt_profile/breakpoint.h"
 #include "pt_profile/measure_point.h"
+#include "pt_profile/perf_event.h"
 
 #include <list>
 #include <string>
@@ -42,7 +41,7 @@ namespace pt_profile
       pid_t m_pid;
       std::intptr_t m_virtual_offset;
       std::unordered_multimap<std::intptr_t, MeasurePoint> m_measure_points;
-      std::list<perf_event::PerformanceCounter> m_counters;
+      std::list<PerformanceCounter> m_counters;
   };
 }
 

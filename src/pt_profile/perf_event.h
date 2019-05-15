@@ -1,10 +1,10 @@
-#ifndef PERF_EVENT_PERF_EVENT_H
-#define PERF_EVENT_PERF_EVENT_H
+#ifndef PT_PROFILE_PERF_EVENT_H
+#define PT_PROFILE_PERF_EVENT_H
 
 #include <linux/perf_event.h>
 #include <unistd.h>
 
-namespace perf_event
+namespace pt_profile
 {
   struct PerformanceCounter
   {

@@ -1,7 +1,7 @@
 #ifndef PT_PROFILE_MEASURE_POINT_H
 #define PT_PROFILE_MEASURE_POINT_H
 
-#include "perf_event/perf_event.h"
+#include "pt_profile/perf_event.h"
 
 namespace pt_profile
 {
@@ -15,7 +15,7 @@ namespace pt_profile
 
     Breakpoint breakpoint = {};
     begin_end_t begin_end = {};
-    perf_event::PerformanceCounter* counter = {};
+    PerformanceCounter* counter = {};
   };
 }
 

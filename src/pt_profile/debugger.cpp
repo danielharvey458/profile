@@ -63,7 +63,7 @@ namespace pt_profile
   void Debugger::set_measure (std::intptr_t begin_address,
                               std::intptr_t end_address)
   {
-    m_counters.push_back (perf_event::PerformanceCounter (PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES, m_pid));
+    m_counters.push_back (PerformanceCounter (PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES, m_pid));
 
     m_measure_points.emplace (
           begin_address,
