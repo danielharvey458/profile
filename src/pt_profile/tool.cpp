@@ -32,9 +32,13 @@ int main (int argc, char **argv)
 {
   using namespace pt_profile;
 
-  if (argc != 3)
+  if (argc < 3)
   {
-    std::cerr << "Usage: " << argv[0] << " CONFIG_FILE PROGRAM" << std::endl;
+    std::cerr << "Usage: "
+              << argv[0]
+              << " CONFIG_FILE PROGRAM ARGS..."
+              << std::endl;
+
     return EXIT_FAILURE;
   }
 
@@ -44,7 +48,7 @@ int main (int argc, char **argv)
   if (pid == 0)
   {
     ptrace (PTRACE_TRACEME, 0, nullptr, nullptr);
-    execl (prog, prog, nullptr);
+    execv (prog, argv + 2);
   }
   else if (pid >= 1)
   {
