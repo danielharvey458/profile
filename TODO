@@ -1,5 +1,3 @@
-* Make into bare commandline tool
-* Print out results at the end of execution
 * Mapping perf events to/from strings (and so, custom events)
 * Define measuring configuration format
 * Use ninja build system?
