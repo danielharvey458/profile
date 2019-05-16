@@ -14,18 +14,21 @@ namespace pt_profile
 
   void Breakpoint::enable ()
   {
-    auto data = ptrace (PTRACE_PEEKDATA, m_pid, m_address, nullptr);
+    if (!m_enabled)
+    {
+      auto data = ptrace (PTRACE_PEEKDATA, m_pid, m_address, nullptr);
 
-    m_saved_data = static_cast<uint8_t> (data & 0xff);
+      m_saved_data = static_cast<uint8_t> (data & 0xff);
 
-    ptrace (PTRACE_POKEDATA,
-            m_pid,
-            m_address,
-            ((data & ~0xff) | 0xcc));
+      ptrace (PTRACE_POKEDATA,
+              m_pid,
+              m_address,
+              ((data & ~0xff) | 0xcc));
 
-    m_enabled = true;
+      m_enabled = true;
+    }
   }
-  
+
   void Breakpoint::disable ()
   {
     auto data = ptrace (PTRACE_PEEKDATA, m_pid, m_address, nullptr);
