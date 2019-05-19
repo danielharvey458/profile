@@ -64,9 +64,9 @@ namespace pt_profile
                               std::intptr_t end_address)
   {
     const auto perf_counter_it
-      = m_counters.emplace (
-          m_counters.end (),
-          AddressedCounter
+      = m_measured_blocks.emplace (
+          m_measured_blocks.end (),
+          MeasuredBlock
           {
             begin_address,
             end_address,
@@ -78,41 +78,16 @@ namespace pt_profile
             }
           });
 
-    m_breakpoints.emplace (
-        begin_address,
-        Breakpoint (m_pid, begin_address + m_virtual_offset))
-          .first->second.enable ();
-
-    m_measure_points.emplace (
-          begin_address,
-          CounterHandle {&perf_counter_it->counter, CounterHandle::START});
-
-    m_breakpoints.emplace (
-        end_address,
-        Breakpoint (m_pid, end_address + m_virtual_offset))
-          .first->second.enable ();
-
-    m_measure_points.emplace (
-          end_address,
-          CounterHandle {&perf_counter_it->counter, CounterHandle::STOP});
+    insert_measure_point (begin_address, &*perf_counter_it);
+    insert_measure_point (end_address, &*perf_counter_it);
   }
 
-  void Debugger::write_memory (uint64_t address, uint64_t value)
-  {
-    ptrace (PTRACE_POKEDATA, m_pid, address, &value);
-  }
-
-  uint64_t Debugger::read_memory (uint64_t address) const
-  {
-    return ptrace (PTRACE_PEEKDATA, m_pid, address, nullptr);
-  }
-
-  uint64_t Debugger::get_pc () const
+  std::intptr_t Debugger::get_pc () const
   {
     return get_register (m_pid, Registers::RIP);
   }
 
-  void Debugger::set_pc (const int64_t pc)
+  void Debugger::set_pc (const std::intptr_t pc)
   {
     set_register (m_pid, Registers::RIP, pc);
   }
@@ -123,6 +98,24 @@ namespace pt_profile
     auto options = 0;
     waitpid (m_pid, &wait_status, options);
     return !WIFEXITED (wait_status);
+  }
+
+  void Debugger::insert_measure_point (const std::intptr_t address,
+                                       MeasuredBlock *block)
+  {
+    auto &measure_point
+      = m_measure_points.emplace (
+          address,
+          MeasurePoint
+          {
+            Breakpoint
+            {
+              m_pid, address + m_virtual_offset
+            }
+          }).first->second;
+
+    measure_point.measured_blocks.push_back (block);
+    measure_point.breakpoint.enable ();
   }
 
   bool Debugger::continue_execution ()
@@ -141,24 +134,23 @@ namespace pt_profile
     /*
      * Find the breakpoint that we have hit
      */
-    const auto breakpoint_it = m_breakpoints.find (virtual_address);
+    const auto it = m_measure_points.find (virtual_address);
 
-    if (breakpoint_it != m_breakpoints.end () &&
-        breakpoint_it->second.is_enabled ())
+    if (it != m_measure_points.end () &&
+        it->second.breakpoint.is_enabled ())
     {
       /*
        * Toggle all measure points.
        */
-      const auto [begin, end] = m_measure_points.equal_range (virtual_address);
-      for (auto it = begin; it != end; ++it)
+      for (const auto block_ptr : it->second.measured_blocks)
       {
-        if (it->second.start_stop == CounterHandle::START)
+        if (block_ptr->start == virtual_address)
         {
-          it->second.counter->start ();
+          block_ptr->counter.start ();
         }
-        else
+        else if (block_ptr->end == virtual_address)
         {
-          it->second.counter->stop ();
+          block_ptr->counter.stop ();
         }
       }
 
@@ -166,10 +158,10 @@ namespace pt_profile
        * Step over the breakpoint
        */
       set_pc (breakpoint);
-      breakpoint_it->second.disable ();
+      it->second.breakpoint.disable ();
       ptrace (PTRACE_SINGLESTEP, m_pid, nullptr, nullptr);
       wait_for_signal ();
-      breakpoint_it->second.enable ();
+      it->second.breakpoint.enable ();
     }
   }
 
@@ -177,15 +169,15 @@ namespace pt_profile
   {
     while (continue_execution ()) {}
 
-    for (const auto &counter : m_counters)
+    for (const auto &block : m_measured_blocks)
     {
       std::cerr << std::hex
-                << "0x" << counter.start
+                << "0x" << block.start
                 << "--"
-                << "0x" << counter.end
+                << "0x" << block.end
                 << ": "
                 << std::dec
-                << counter.counter.get () << std::endl;
+                << block.counter.get () << std::endl;
     }
   }
 }
