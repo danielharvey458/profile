@@ -22,7 +22,8 @@ namespace pt_profile
 
       void run ();
 
-      void set_measure (std::intptr_t begin_address,
+      void set_measure (const Event &event,
+                        std::intptr_t begin_address,
                         std::intptr_t end_address);
 
     private:

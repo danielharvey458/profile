@@ -1,4 +1,5 @@
 #include "pt_profile/breakpoint.h"
+#include "pt_profile/perf_event.h"
 #include "pt_profile/debugger.h"
 
 #include <iostream>
@@ -10,22 +11,26 @@
 #include <fstream>
 #include <sstream>
 
-std::vector<std::pair<std::intptr_t, std::intptr_t>>
-config_from_file (std::istream &&input)
+namespace pt_profile
 {
-  std::vector<std::pair<std::intptr_t, std::intptr_t>> result;
-  std::string temp;
-
-  while (std::getline (input, temp))
+  std::vector<std::tuple<Event, std::intptr_t, std::intptr_t>>
+  config_from_file (std::istream &&input)
   {
-    std::intptr_t start, stop;
-    std::stringstream string_stream (temp);
+    std::vector<std::tuple<Event, std::intptr_t, std::intptr_t>> result;
+    std::string temp;
 
-    string_stream >> std::hex >> start >> stop;
-    result.emplace_back (start, stop);
+    while (std::getline (input, temp))
+    {
+      std::string event;
+      std::intptr_t start, stop;
+      std::stringstream string_stream (temp);
+
+      string_stream >> event >> std::hex >> start >> stop;
+      result.emplace_back (event_from_string (event), start, stop);
+    }
+
+    return result;
   }
-
-  return result;
 }
 
 int main (int argc, char **argv)
@@ -54,9 +59,10 @@ int main (int argc, char **argv)
   {
     auto dbg = Debugger (prog, pid);
 
-    for (const auto &[start, stop] : config_from_file (std::ifstream (argv[1])))
+    for (const auto &[event, start, stop]
+         : config_from_file (std::ifstream (argv[1])))
     {
-      dbg.set_measure (start, stop);
+      dbg.set_measure (event, start, stop);
     }
     dbg.run ();
   }

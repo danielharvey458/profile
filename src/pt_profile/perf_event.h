@@ -4,13 +4,19 @@
 #include <linux/perf_event.h>
 #include <unistd.h>
 
+#include <string>
+#include <tuple>
+#include <vector>
+
 namespace pt_profile
 {
+  using Event = std::pair<unsigned, long long unsigned>;
+
   struct PerformanceCounter
   {
     public:
 
-      PerformanceCounter (unsigned type, long long unsigned config, pid_t pid);
+      explicit PerformanceCounter (const Event &event, pid_t pid);
 
       PerformanceCounter (const PerformanceCounter &) = delete;
       PerformanceCounter &operator = (const PerformanceCounter &) = delete;
@@ -28,10 +34,19 @@ namespace pt_profile
 
       long get () const;
 
+      Event event () const;
+
     private:
       struct perf_event_attr m_pe;
       int m_fd = {};
   };
+
+
+  Event event_from_string (const std::string &event_name);
+
+  const std::string &event_to_string (const Event &event);
+
+  const std::vector<std::string> &all_event_names ();
 }
 
 #endif

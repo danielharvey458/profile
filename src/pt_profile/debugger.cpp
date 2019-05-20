@@ -60,7 +60,8 @@ namespace pt_profile
   {
   }
 
-  void Debugger::set_measure (std::intptr_t begin_address,
+  void Debugger::set_measure (const Event &event,
+                              std::intptr_t begin_address,
                               std::intptr_t end_address)
   {
     const auto perf_counter_it
@@ -70,12 +71,7 @@ namespace pt_profile
           {
             begin_address,
             end_address,
-            PerformanceCounter
-            {
-              PERF_TYPE_HARDWARE,
-              PERF_COUNT_HW_INSTRUCTIONS,
-              m_pid
-            }
+            PerformanceCounter {event, m_pid}
           });
 
     insert_measure_point (begin_address, &*perf_counter_it);
@@ -175,6 +171,8 @@ namespace pt_profile
                 << "0x" << block.start
                 << "--"
                 << "0x" << block.end
+                << " "
+                << event_to_string (block.counter.event ())
                 << ": "
                 << std::dec
                 << block.counter.get () << std::endl;

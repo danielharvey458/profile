@@ -12,8 +12,9 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#include <iostream>
 #include <sys/stat.h>
+
+#include <algorithm>
 
 namespace pt_profile
 {
@@ -29,12 +30,12 @@ namespace pt_profile
     }
   }
 
-  PerformanceCounter::PerformanceCounter (unsigned type, long long unsigned config, pid_t pid)
+  PerformanceCounter::PerformanceCounter (const Event &event, pid_t pid)
   {
     memset(&m_pe, 0, sizeof(struct perf_event_attr));
-    m_pe.type = type;
+    m_pe.type = event.first;
     m_pe.size = sizeof(struct perf_event_attr);
-    m_pe.config = config;
+    m_pe.config = event.second;
     m_pe.disabled = 1;
     m_pe.exclude_kernel = 1;
     m_pe.exclude_hv = 1;
@@ -46,16 +47,24 @@ namespace pt_profile
                       + strerror (errno));
   }
 
+  Event PerformanceCounter::event () const
+  {
+    return {m_pe.type, m_pe.config};
+  }
+
   PerformanceCounter::PerformanceCounter (PerformanceCounter &&other)
   {
     m_fd = other.m_fd;
     other.m_fd = -1;
+    m_pe = other.m_pe;
   }
 
-  PerformanceCounter &PerformanceCounter::operator = (PerformanceCounter && other)
+  PerformanceCounter &
+  PerformanceCounter::operator = (PerformanceCounter && other)
   {
     m_fd = other.m_fd;
     other.m_fd = -1;
+    m_pe = other.m_pe;
     return *this;
   }
 
@@ -100,4 +109,78 @@ namespace pt_profile
 
     return count;
   }
+
+  namespace
+  {
+    using EventLookup = std::pair<std::vector<Event>, std::vector<std::string>>;
+
+    const EventLookup &event_lookup ()
+    {
+      static const auto lookup = []
+      {
+        EventLookup lookup;
+
+#define ADD_EVENT(type, name)                   \
+        lookup.first.emplace_back (type, name); \
+        lookup.second.emplace_back (#name);
+
+        ADD_EVENT(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CPU_CYCLES);
+        ADD_EVENT(PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+        ADD_EVENT(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_REFERENCES);
+        ADD_EVENT(PERF_TYPE_HARDWARE, PERF_COUNT_HW_CACHE_MISSES);
+        ADD_EVENT(PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_INSTRUCTIONS);
+        ADD_EVENT(PERF_TYPE_HARDWARE, PERF_COUNT_HW_BRANCH_MISSES);
+        ADD_EVENT(PERF_TYPE_HARDWARE, PERF_COUNT_HW_BUS_CYCLES);
+        ADD_EVENT(PERF_TYPE_HARDWARE, PERF_COUNT_HW_STALLED_CYCLES_FRONTEND);
+        ADD_EVENT(PERF_TYPE_HARDWARE, PERF_COUNT_HW_STALLED_CYCLES_BACKEND);
+        ADD_EVENT(PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES);
+
+#undef ADD_EVENT
+        return lookup;
+      } ();
+
+      return lookup;
+    }
+  }
+
+  Event event_from_string (const std::string &event_name)
+  {
+    const auto &lookup = event_lookup ();
+
+    const auto icompare = [&] (const auto &name)
+    {
+      return std::equal (name.begin (), name.end (),
+                         event_name.begin (), event_name.end (),
+                         [] (char a, char b)
+                         {
+                           return tolower (a) == tolower (b);
+                         });
+    };
+
+    const auto it = std::find_if (lookup.second.begin (),
+                                  lookup.second.end (),
+                                  icompare);
+
+    ASSERT (it != lookup.second.end (), "No such event");
+
+    return lookup.first[std::distance (lookup.second.begin (), it)];
+  }
+
+  const std::string &event_to_string (const Event &event)
+  {
+    const auto &lookup = event_lookup ();
+
+    const auto it = std::find (lookup.first.begin (),
+                               lookup.first.end (),
+                               event);
+    ASSERT (it != lookup.first.end (), "No such event");
+
+    return lookup.second[std::distance (lookup.first.begin (), it)];
+  }
+
+  const std::vector<std::string> &all_event_names ()
+  {
+    return event_lookup ().second;
+  }
+
 }
