@@ -1,4 +1,3 @@
-
 CXXFLAGS = --std=c++1z
 CXXFLAGS += -Isrc/
 CXXFLAGS += -I/home/harvey/software/linenoise/linenoise-v1
@@ -7,32 +6,24 @@ CXXFLAGS += -Wall
 
 LDFLAGS += -I/home/harvey/software/linenoise/linenoise-v1
 LDFLAGS += -L/home/harvey/software/linenoise/linenoise-v1/lib
-LDFLAGS += -Lbuild/lib/
 LDFLAGS += -llinenoise
-LDFLAGS += -lperfevent
 
-build_directory:
-	mkdir -p build
-	mkdir -p build/lib
-	mkdir -p build/.obj/pt_profile
+.DEFAULT_GOAL = all
 
-build/.obj/pt_profile/breakpoint.o: build_directory
-	$(CXX) src/pt_profile/breakpoint.cpp $(CXXFLAGS) -c -o $(@)
+build/.obj/pt_profile/%.o : src/pt_profile/%.cpp
+	@mkdir -p $(@D)
+	@printf "Compiling $@\n"
+	@$(CXX) $(<) $(CXXFLAGS) -c -o $(@)
 
-build/.obj/pt_profile/tokenizer.o: build_directory
-	$(CXX) src/pt_profile/tokenizer.cpp $(CXXFLAGS) -c -o $(@)
+objects := $(patsubst src/pt_profile/%.cpp,              \
+                      build/.obj/pt_profile/%.o,         \
+                      $(wildcard src/pt_profile/*.cpp))
 
-build/.obj/pt_profile/registers.o: build_directory
-	$(CXX) src/pt_profile/registers.cpp $(CXXFLAGS) -c -o $(@)
-
-build/.obj/pt_profile/debugger.o: build_directory
-	$(CXX) src/pt_profile/debugger.cpp $(CXXFLAGS) -c -o $(@)
-
-build/.obj/pt_profile/perf_event.o: build_directory
-	$(CXX) src/pt_profile/perf_event.cpp $(CXXFLAGS) -fpic -c -o $(@)
-
-build/tool: build/.obj/pt_profile/breakpoint.o build/.obj/pt_profile/tokenizer.o build/.obj/pt_profile/registers.o build/.obj/pt_profile/debugger.o build/.obj/pt_profile/perf_event.o
-	$(CXX) src/pt_profile/tool.cpp $(CXXFLAGS) $(^) $(LDFLAGS) -o $(@)
+build/tool : $(objects)
+	@printf "Compiling $@\n"
+	@$(CXX) $(^) $(LDFLAGS) -o $(@)
 
 clean:
-	rm -rf build
+	@rm -rf build
+
+all: build/tool
