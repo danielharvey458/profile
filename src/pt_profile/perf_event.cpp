@@ -39,6 +39,8 @@ namespace pt_profile
     m_pe.disabled = 1;
     m_pe.exclude_kernel = 1;
     m_pe.exclude_hv = 1;
+    m_pe.exclude_idle = 1;
+
     errno = 0; 
 
     m_fd = perf_event_open (&m_pe, pid, -1, -1, 0);
