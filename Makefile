@@ -1,12 +1,7 @@
 CXXFLAGS = --std=c++1z
 CXXFLAGS += -Isrc/
-CXXFLAGS += -I/home/harvey/software/linenoise/linenoise-v1
 CXXFLAGS += -Werror
 CXXFLAGS += -Wall
-
-LDFLAGS += -I/home/harvey/software/linenoise/linenoise-v1
-LDFLAGS += -L/home/harvey/software/linenoise/linenoise-v1/lib
-LDFLAGS += -llinenoise
 
 .DEFAULT_GOAL = all
 

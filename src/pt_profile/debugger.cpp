@@ -2,8 +2,6 @@
 #include "pt_profile/tokenizer.h"
 #include "pt_profile/registers.h"
 
-#include "linenoise.h"
-
 #include <sys/ptrace.h>
 #include <sys/user.h>
 #include <sys/wait.h>
