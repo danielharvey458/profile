@@ -1,4 +1,6 @@
-* Mapping perf events to/from strings (and so, custom events)
+* Mapping addresses from debug information
+* Use perf event groups
+* Initial regression testing
 * Define measuring configuration format
 * Use ninja build system?
 * Testing as much as possible
