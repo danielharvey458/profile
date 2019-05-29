@@ -1,6 +1,8 @@
-* Mapping addresses from debug information
+* Enable different types of measuring (address ranges, functions)
 * Use perf event groups
 * Initial regression testing
 * Define measuring configuration format
 * Use ninja build system?
 * Testing as much as possible
+* Tracepoints (e.g. kmalloc)
+* How measure functions defined in other shared libraries
