@@ -1,5 +1,5 @@
-#ifndef PT_PROFILE_PERF_EVENT_H
-#define PT_PROFILE_PERF_EVENT_H
+#ifndef PROFILE_PERF_EVENT_H
+#define PROFILE_PERF_EVENT_H
 
 #include <linux/perf_event.h>
 #include <unistd.h>
@@ -8,7 +8,7 @@
 #include <tuple>
 #include <vector>
 
-namespace pt_profile
+namespace profile
 {
   using Event = std::pair<unsigned, long long unsigned>;
 

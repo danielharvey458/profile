@@ -19,14 +19,14 @@ LDFLAGS  += -ldwarf++
 
 .DEFAULT_GOAL = all
 
-build/.obj/pt_profile/%.o : src/pt_profile/%.cpp
+build/.obj/profile/%.o : src/profile/%.cpp
 	@mkdir -p $(@D)
 	@printf "Compiling $@\n"
 	@$(CXX) $(<) $(CXXFLAGS) -c -o $(@)
 
-objects := $(patsubst src/pt_profile/%.cpp,              \
-                      build/.obj/pt_profile/%.o,         \
-                      $(wildcard src/pt_profile/*.cpp))
+objects := $(patsubst src/profile/%.cpp,              \
+                      build/.obj/profile/%.o,         \
+                      $(wildcard src/profile/*.cpp))
 
 build/tool : $(objects)
 	@printf "Compiling $@\n"

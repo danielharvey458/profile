@@ -1,6 +1,6 @@
-#include "pt_profile/elf_parser.h"
+#include "profile/elf_parser.h"
 
-namespace pt_profile
+namespace profile
 {
   std::pair<std::intptr_t, std::intptr_t>
   get_function_range (const dwarf::dwarf &dwarf_info,

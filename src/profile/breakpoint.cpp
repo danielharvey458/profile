@@ -1,8 +1,8 @@
-#include "pt_profile/breakpoint.h"
+#include "profile/breakpoint.h"
 
 #include <sys/ptrace.h>
 
-namespace pt_profile
+namespace profile
 {
   Breakpoint::Breakpoint (pid_t pid, std::intptr_t address)
     : m_pid {pid},

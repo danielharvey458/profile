@@ -1,5 +1,5 @@
-#include "pt_profile/perf_event.h"
-#include "pt_profile/exception.h"
+#include "profile/perf_event.h"
+#include "profile/exception.h"
 
 #include <asm/unistd.h>
 #include <linux/perf_event.h>
@@ -16,7 +16,7 @@
 
 #include <algorithm>
 
-namespace pt_profile
+namespace profile
 {
   namespace
   {

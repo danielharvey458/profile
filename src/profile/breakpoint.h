@@ -1,10 +1,10 @@
-#ifndef PT_PROFILE_BREAKPOINT_H
-#define PT_PROFILE_BREAKPOINT_H
+#ifndef PROFILE_BREAKPOINT_H
+#define PROFILE_BREAKPOINT_H
 
 #include <cstdint>
 #include <sys/types.h>
 
-namespace pt_profile
+namespace profile
 {
   struct Breakpoint
   {

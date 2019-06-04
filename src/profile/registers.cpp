@@ -1,8 +1,8 @@
-#include "pt_profile/registers.h"
+#include "profile/registers.h"
 
 #include <algorithm>
 
-namespace pt_profile
+namespace profile
 {
   namespace
   {

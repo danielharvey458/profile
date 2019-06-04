@@ -1,6 +1,6 @@
-#include "pt_profile/debugger.h"
-#include "pt_profile/tokenizer.h"
-#include "pt_profile/registers.h"
+#include "profile/debugger.h"
+#include "profile/tokenizer.h"
+#include "profile/registers.h"
 
 #include <sys/ptrace.h>
 #include <sys/user.h>
@@ -10,7 +10,7 @@
 #include <fstream>
 #include <iostream>
 
-namespace pt_profile
+namespace profile
 {
   namespace
   {

@@ -1,8 +1,8 @@
-#ifndef PT_PROFILE_DEBUGGER_H
-#define PT_PROFILE_DEBUGGER_H
+#ifndef PROFILE_DEBUGGER_H
+#define PROFILE_DEBUGGER_H
 
-#include "pt_profile/breakpoint.h"
-#include "pt_profile/perf_event.h"
+#include "profile/breakpoint.h"
+#include "profile/perf_event.h"
 
 #include <deque>
 #include <string>
@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <sys/types.h>
 
-namespace pt_profile
+namespace profile
 {
   class Debugger
   {

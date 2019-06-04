@@ -1,7 +1,7 @@
-#include "pt_profile/breakpoint.h"
-#include "pt_profile/debugger.h"
-#include "pt_profile/elf_parser.h"
-#include "pt_profile/perf_event.h"
+#include "profile/breakpoint.h"
+#include "profile/debugger.h"
+#include "profile/elf_parser.h"
+#include "profile/perf_event.h"
 
 #include "elf++.hh"
 #include "dwarf++.hh"
@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <vector>
 
-namespace pt_profile
+namespace profile
 {
   std::vector<std::tuple<Event, std::string>>
   config_from_file (std::istream &&input)
@@ -40,7 +40,7 @@ namespace pt_profile
 
 int main (int argc, char **argv)
 {
-  using namespace pt_profile;
+  using namespace profile;
 
   if (argc < 3)
   {

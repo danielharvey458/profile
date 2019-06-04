@@ -1,11 +1,11 @@
-#ifndef PT_PROFILE_REGISTERS_H
-#define PT_PROFILE_REGISTERS_H
+#ifndef PROFILE_REGISTERS_H
+#define PROFILE_REGISTERS_H
 
 #include <sys/user.h>
 
 #include <array>
 
-namespace pt_profile
+namespace profile
 {
   class Registers
   {

@@ -1,6 +1,6 @@
 #include <string>
 
-namespace pt_profile
+namespace profile
 {
   class Tokenizer
   {

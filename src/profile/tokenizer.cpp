@@ -1,9 +1,9 @@
-#include "pt_profile/tokenizer.h"
+#include "profile/tokenizer.h"
 
 #include <algorithm>
 #include <stdexcept>
 
-namespace pt_profile
+namespace profile
 {
   Tokenizer::Tokenizer (std::string string, char separator)
     : m_string (std::move (string)),
