@@ -1,7 +1,10 @@
+.DEFAULT_GOAL = all
+
 CXXFLAGS = --std=c++1z
 CXXFLAGS += -Isrc/
 CXXFLAGS += -Werror
 CXXFLAGS += -Wall
+CXXFLAGS += -g
 
 # Depends on libelf and libdwarf
 LIBELFIN_VERSION=libelfin-v1
@@ -16,8 +19,8 @@ CXXFLAGS += -I$(LIBELFIN_LOCATION)/dwarf
 LDFLAGS  += -I$(LIBELFIN_LOCATION)/dwarf
 LDFLAGS  += -L$(LIBELFIN_LOCATION)/dwarf
 LDFLAGS  += -ldwarf++
-
-.DEFAULT_GOAL = all
+LDFLAGS  += -Wl,-rpath,$(LIBELFIN_LOCATION)/elf
+LDFLAGS  += -Wl,-rpath,$(LIBELFIN_LOCATION)/dwarf
 
 build/.obj/profile/%.o : src/profile/%.cpp
 	@mkdir -p $(@D)
@@ -32,7 +35,35 @@ build/tool : $(objects)
 	@printf "Compiling $@\n"
 	@$(CXX) $(^) $(LDFLAGS) -o $(@)
 
+## Regression tests
+TEST_DIR=tests/test_tool_regression
+TEST_EXECUTABLES=$(TEST_DIR)/test_executables
+TEST_RUNNER=$(TEST_DIR)/test_runner.sh
+TEST_SCRIPT=$(TEST_DIR)/test_tool_regression.sh
+TEST_EXPECTED=$(TEST_DIR)/expected.log
+
+# Compile test executables
+build/tests/test_executables/% : $(TEST_EXECUTABLES)/%.cpp
+	@mkdir -p $(@D)
+	@printf "Compiling $@\n"
+	@$(CXX) $(<) $(CXXFLAGS) -o $(@)
+
+test_executables := \
+  $(patsubst $(TEST_EXECUTABLES)/%.cpp, \
+             build/tests/test_executables/%, \
+             $(wildcard $(TEST_EXECUTABLES)/*.cpp))
+
+build/tests/result.log : $(test_executables) build/tool
+	@BIN_DIR=build                                     \
+	TEST_EXECUTABLES=build/tests/test_executables      \
+	./$(TEST_RUNNER) $(TEST_SCRIPT) $(TEST_EXPECTED)
+	@touch $(@)
+
+test : build/tests/result.log
+
 clean:
 	@rm -rf build
 
 all: build/tool
+
+.PHONY: clean test all
