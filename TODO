@@ -1,8 +1,6 @@
 * Enable different types of measuring (address ranges, functions)
 * How measure functions defined in other shared libraries
 * Use perf event groups
-* Initial regression testing
-* Define measuring configuration format
 * Use ninja build system?
 * Testing as much as possible
 * Tracepoints (e.g. kmalloc)
