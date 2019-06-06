@@ -60,7 +60,8 @@ namespace profile
 
   void Debugger::set_measure (const Event &event,
                               std::intptr_t begin_address,
-                              std::intptr_t end_address)
+                              std::intptr_t end_address,
+                              const std::string &name)
   {
     const auto perf_counter_it
       = m_measured_blocks.emplace (
@@ -69,7 +70,8 @@ namespace profile
           {
             begin_address,
             end_address,
-            PerformanceCounter {event, m_pid}
+            PerformanceCounter {event, m_pid},
+            name
           });
 
     insert_measure_point (begin_address, &*perf_counter_it);
@@ -165,11 +167,20 @@ namespace profile
 
     for (const auto &block : m_measured_blocks)
     {
-      std::cerr << std::hex
-                << "0x" << block.start
-                << "--"
-                << "0x" << block.end
-                << " "
+      std::cerr << std::hex;
+
+      if (!block.name.empty ())
+      {
+        std::cerr << block.name;
+      }
+      else
+      {
+        std::cerr << "0x" << block.start
+                  << "--"
+                  << "0x" << block.end;
+      }
+
+      std::cerr << " "
                 << event_to_string (block.counter.event ())
                 << ": "
                 << std::dec

@@ -88,7 +88,7 @@ int main (int argc, char **argv)
     for (const auto &[event, function] : args.profile_config)
     {
       const auto [lo, hi] = get_function_range (dw, function);
-      dbg.set_measure (event, lo, hi);
+      dbg.set_measure (event, lo, hi, function);
     }
     dbg.run ();
   }

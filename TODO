@@ -1,5 +1,4 @@
 * Enable different types of measuring (address ranges, functions)
-* Report function name or address range as appropriate
 * How measure functions defined in other shared libraries
 * Use perf event groups
 * Initial regression testing

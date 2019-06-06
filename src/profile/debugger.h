@@ -24,7 +24,8 @@ namespace profile
 
       void set_measure (const Event &event,
                         std::intptr_t begin_address,
-                        std::intptr_t end_address);
+                        std::intptr_t end_address,
+                        const std::string &name);
 
     private:
 
@@ -33,6 +34,7 @@ namespace profile
         std::intptr_t start = {};
         std::intptr_t end = {};
         PerformanceCounter counter;
+        std::string name;
       };
 
       struct MeasurePoint
