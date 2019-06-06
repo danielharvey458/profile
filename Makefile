@@ -37,23 +37,23 @@ build/tool : $(objects)
 
 ## Regression tests
 TEST_DIR=tests/test_tool_regression
-TEST_EXECUTABLES=$(TEST_DIR)/test_executables
+TEST_EXECUTABLES_DIR=$(TEST_DIR)/test_executables
 TEST_RUNNER=$(TEST_DIR)/test_runner.sh
 TEST_SCRIPT=$(TEST_DIR)/test_tool_regression.sh
 TEST_EXPECTED=$(TEST_DIR)/expected.log
 
 # Compile test executables
-build/tests/test_executables/% : $(TEST_EXECUTABLES)/%.cpp
+build/tests/test_executables/% : $(TEST_EXECUTABLES_DIR)/%.cpp
 	@mkdir -p $(@D)
 	@printf "Compiling $@\n"
 	@$(CXX) $(<) $(CXXFLAGS) -o $(@)
 
-test_executables := \
-  $(patsubst $(TEST_EXECUTABLES)/%.cpp, \
+TEST_EXECUTABLES := \
+  $(patsubst $(TEST_EXECUTABLES_DIR)/%.cpp, \
              build/tests/test_executables/%, \
-             $(wildcard $(TEST_EXECUTABLES)/*.cpp))
+             $(wildcard $(TEST_EXECUTABLES_DIR)/*.cpp))
 
-build/tests/result.log : $(test_executables) build/tool
+build/tests/result.log : $(TEST_EXECUTABLES) build/tool $(TEST_SCRIPT)
 	@BIN_DIR=build                                     \
 	TEST_EXECUTABLES=build/tests/test_executables      \
 	./$(TEST_RUNNER) $(TEST_SCRIPT) $(TEST_EXPECTED)

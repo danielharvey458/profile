@@ -18,23 +18,40 @@
 
 namespace profile
 {
-  std::vector<std::tuple<Event, std::string>>
-  config_from_file (std::istream &&input)
+  struct Args
   {
-    std::vector<std::tuple<Event, std::string>> result;
-    std::string temp;
+    std::vector<std::pair<Event, std::string>> profile_config;
+    size_t executable_index = 0;
+  };
 
-    while (std::getline (input, temp))
+  Args parse_args (const std::vector<std::string> &cmd_args)
+  {
+    Args args;
+
+    for (auto idx = 0u; idx < cmd_args.size (); ++idx)
     {
-      std::string event;
-      std::string function;
-      std::stringstream string_stream (temp);
+      if (cmd_args[idx] == "-e")
+      {
+        const auto spec = cmd_args.at (idx + 1);
+        const auto it = spec.find (':');
+        const auto event = std::string (spec.begin (), spec.begin () + it);
+        const auto function = std::string (spec.begin () + it + 1, spec.end ());
 
-      string_stream >> event >> function;
-      result.emplace_back (event_from_string (event), function);
+        args.profile_config.emplace_back (
+          event_from_string (event), function);
+      }
+      else if (cmd_args[idx] == "--")
+      {
+        /*
+         * Note don't add 1 here as 'args' has already
+         * removed the program name
+         */
+        args.executable_index = idx + 2;
+        return args;
+      }
     }
 
-    return result;
+    return args;
   }
 }
 
@@ -46,29 +63,29 @@ int main (int argc, char **argv)
   {
     std::cerr << "Usage: "
               << argv[0]
-              << " CONFIG_FILE PROGRAM ARGS..."
+              << " [-e event:function_spec] -- PROGRAM ARGS..."
               << std::endl;
 
     return EXIT_FAILURE;
   }
 
-  const auto prog = argv[2];
+  const auto args = parse_args ({argv + 1, argv + argc});
+  const auto executable = argv[args.executable_index];
   const auto pid = fork ();
 
   if (pid == 0)
   {
     ptrace (PTRACE_TRACEME, 0, nullptr, nullptr);
-    execv (prog, argv + 2);
+    execv (executable, argv + args.executable_index + 1);
   }
   else if (pid >= 1)
   {
-    auto dbg = Debugger (prog, pid);
-    const auto fd = open (argv[2], O_RDONLY);
+    auto dbg = Debugger (executable, pid);
+    const auto fd = open (executable, O_RDONLY);
     const auto e = elf::elf (elf::create_mmap_loader (fd));
     const auto dw = dwarf::dwarf (dwarf::elf::create_loader (e));
 
-    for (const auto &[event, function]
-         : config_from_file (std::ifstream (argv[1])))
+    for (const auto &[event, function] : args.profile_config)
     {
       const auto [lo, hi] = get_function_range (dw, function);
       dbg.set_measure (event, lo, hi);

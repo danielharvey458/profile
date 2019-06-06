@@ -20,6 +20,7 @@ then
   echo -e "Test $(basename ${TEST_SCRIPT}) [${RED}Failed${NC}]"
   PERM=$(mktemp -d)
   mv ${OUTPUT} ${PERM}/unexpected.log
+  echo ${DIFF}
   echo -e "Compare output using:"
   echo -e "    diff ${PERM}/unexpected.log ${EXPECTED}"
   exit 1
