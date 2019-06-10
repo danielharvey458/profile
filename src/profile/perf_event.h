@@ -39,6 +39,7 @@ namespace profile
     private:
       struct perf_event_attr m_pe;
       int m_fd = {};
+      static int m_group_leader;
   };
 
 

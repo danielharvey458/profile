@@ -30,6 +30,8 @@ namespace profile
     }
   }
 
+  int PerformanceCounter::m_group_leader = -1;
+
   PerformanceCounter::PerformanceCounter (const Event &event, pid_t pid)
   {
     memset(&m_pe, 0, sizeof(struct perf_event_attr));
@@ -43,7 +45,12 @@ namespace profile
 
     errno = 0; 
 
-    m_fd = perf_event_open (&m_pe, pid, -1, -1, 0);
+    m_fd = perf_event_open (&m_pe, pid, -1, m_group_leader, 0);
+
+    if (m_group_leader == -1)
+    {
+      m_group_leader = m_fd;
+    }
 
     ASSERT (m_fd > 0, std::string ("Failed to open perf event, ")
                       + strerror (errno));
