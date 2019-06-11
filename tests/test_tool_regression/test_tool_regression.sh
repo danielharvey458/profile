@@ -11,3 +11,10 @@ CONFIG="-e perf_count_hw_instructions:hello_world"
 CONFIG+=" -e perf_count_hw_cpu_cycles:hello_world"
 ${TOOL} ${CONFIG} -- ${TEST_EXECUTABLES}/hello_world 2>&1 > /dev/null | \
   sed -e "s/${REPORT_QUANTITY}/REPORT_QUANTITY/g"
+
+CONFIG="-e perf_count_hw_instructions:f1"
+CONFIG+=" -e perf_count_hw_cpu_cycles:f1"
+CONFIG+=" -e perf_count_hw_instructions:f2"
+CONFIG+=" -e perf_count_hw_cpu_cycles:f2"
+${TOOL} ${CONFIG} -- ${TEST_EXECUTABLES}/nested_call 2>&1 > /dev/null | \
+  sed -e "s/${REPORT_QUANTITY}/REPORT_QUANTITY/g"

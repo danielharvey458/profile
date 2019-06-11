@@ -54,6 +54,8 @@ namespace profile
 
     ASSERT (m_fd > 0, std::string ("Failed to open perf event, ")
                       + strerror (errno));
+
+    enable ();
   }
 
   Event PerformanceCounter::event () const
@@ -82,7 +84,7 @@ namespace profile
     close (m_fd);
   }
 
-  void PerformanceCounter::start ()
+  void PerformanceCounter::enable ()
   {
     errno = 0;
     ASSERT (ioctl (m_fd, PERF_EVENT_IOC_ENABLE, 0) >= 0,
@@ -90,12 +92,22 @@ namespace profile
             + strerror (errno));
   }
 
-  void PerformanceCounter::stop ()
+  void PerformanceCounter::disable ()
   {
     errno = 0;
     ASSERT (ioctl (m_fd, PERF_EVENT_IOC_DISABLE, 0) >= 0,
             std::string ("Failed to disable perf event, ")
             + strerror (errno));
+  }
+
+  void PerformanceCounter::start ()
+  {
+    m_last = read_file ();
+  }
+
+  void PerformanceCounter::stop ()
+  {
+    m_count += read_file () - m_last;
   }
 
   void PerformanceCounter::reset ()
@@ -107,6 +119,11 @@ namespace profile
   }
 
   long PerformanceCounter::get () const
+  {
+    return m_count;
+  }
+
+  long PerformanceCounter::read_file () const
   {
     errno = 0;
 

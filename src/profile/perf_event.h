@@ -26,6 +26,10 @@ namespace profile
 
       ~PerformanceCounter ();
 
+      void enable ();
+
+      void disable ();
+
       void start ();
 
       void stop ();
@@ -34,11 +38,15 @@ namespace profile
 
       long get () const;
 
+      long read_file () const;
+
       Event event () const;
 
     private:
       struct perf_event_attr m_pe;
       int m_fd = {};
+      long m_last = {};
+      long m_count = {};
       static int m_group_leader;
   };
 
