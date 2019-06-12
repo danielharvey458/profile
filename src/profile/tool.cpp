@@ -87,8 +87,18 @@ int main (int argc, char **argv)
 
     for (const auto &[event, function] : args.profile_config)
     {
-      const auto [lo, hi] = get_function_range (dw, function);
-      dbg.set_measure (event, lo, hi, function);
+      const auto opt = get_function_range (dw, function);
+
+      if (!opt)
+      {
+        fprintf (stderr,
+                 "Couldn't find symbol for '%s'\n",
+                 function.c_str ());
+
+        return EXIT_FAILURE;
+      }
+
+      dbg.set_measure (event, opt->first, opt->second, function);
     }
     dbg.run ();
   }

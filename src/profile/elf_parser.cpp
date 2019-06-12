@@ -2,7 +2,7 @@
 
 namespace profile
 {
-  std::pair<std::intptr_t, std::intptr_t>
+  std::optional<std::pair<std::intptr_t, std::intptr_t>>
   get_function_range (const dwarf::dwarf &dwarf_info,
                       const std::string &function_name)
   {
@@ -17,7 +17,7 @@ namespace profile
         }
       }
     }
-    return std::make_pair (0, 0);
+    return std::nullopt;
   }
 }
 
