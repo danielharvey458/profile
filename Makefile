@@ -22,7 +22,7 @@ LDFLAGS  += -ldwarf++
 LDFLAGS  += -Wl,-rpath,$(LIBELFIN_LOCATION)/elf
 LDFLAGS  += -Wl,-rpath,$(LIBELFIN_LOCATION)/dwarf
 
-build/.obj/profile/%.o : src/profile/%.cpp
+build/.obj/profile/%.o : src/profile/%.cpp src/profile/%.h
 	@mkdir -p $(@D)
 	@printf "Compiling $@\n"
 	@$(CXX) $(<) $(CXXFLAGS) -c -o $(@)

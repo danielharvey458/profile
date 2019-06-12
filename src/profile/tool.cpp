@@ -1,7 +1,7 @@
 #include "profile/breakpoint.h"
 #include "profile/debugger.h"
 #include "profile/elf_parser.h"
-#include "profile/perf_event.h"
+#include "profile/performance_counter.h"
 
 #include "elf++.hh"
 #include "dwarf++.hh"
