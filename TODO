@@ -1,5 +1,14 @@
+== Useability ==
 * Enable different types of measuring (address ranges, functions)
-* How measure functions defined in other shared libraries
+
+== Infrastructure ==
 * Use ninja build system?
 * Testing as much as possible
+
+== Features ==
 * Tracepoints (e.g. kmalloc)
+
+== Function lookup ==
+* Functions in namespaces
+* Functions in anonymous namespaces
+* Functions in dynamically loaded libraries
