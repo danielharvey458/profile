@@ -2,7 +2,7 @@
 #define PROFILE_DEBUGGER_H
 
 #include "profile/breakpoint.h"
-#include "profile/perf_event.h"
+#include "profile/performance_counter.h"
 
 #include <deque>
 #include <string>

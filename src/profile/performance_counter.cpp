@@ -1,4 +1,4 @@
-#include "profile/perf_event.h"
+#include "profile/performance_counter.h"
 #include "profile/exception.h"
 
 #include <asm/unistd.h>
