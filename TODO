@@ -9,6 +9,6 @@
 * Tracepoints (e.g. kmalloc)
 
 == Function lookup ==
-* Functions in namespaces
+* Member functions (and therefore lambdas)
 * Functions in anonymous namespaces
 * Functions in dynamically loaded libraries

@@ -23,3 +23,7 @@ CONFIG="-e perf_count_hw_cache_misses:cache_friendly"
 CONFIG+=" -e perf_count_hw_cache_misses:cache_missy"
 ${TOOL} ${CONFIG} -- ${TEST_EXECUTABLES}/cache_misses 2>&1 > /dev/null | \
   sed -e "s/${REPORT_QUANTITY}/REPORT_QUANTITY/g"
+
+CONFIG="-e perf_count_hw_instructions:namespaced"
+${TOOL} ${CONFIG} -- ${TEST_EXECUTABLES}/find_function 2>&1 > /dev/null | \
+  sed -e "s/${REPORT_QUANTITY}/REPORT_QUANTITY/g"
