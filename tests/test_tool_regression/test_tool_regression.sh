@@ -18,3 +18,8 @@ CONFIG+=" -e perf_count_hw_instructions:f2"
 CONFIG+=" -e perf_count_hw_cpu_cycles:f2"
 ${TOOL} ${CONFIG} -- ${TEST_EXECUTABLES}/nested_call 2>&1 > /dev/null | \
   sed -e "s/${REPORT_QUANTITY}/REPORT_QUANTITY/g"
+
+CONFIG="-e perf_count_hw_cache_misses:cache_friendly"
+CONFIG+=" -e perf_count_hw_cache_misses:cache_missy"
+${TOOL} ${CONFIG} -- ${TEST_EXECUTABLES}/cache_misses 2>&1 > /dev/null | \
+  sed -e "s/${REPORT_QUANTITY}/REPORT_QUANTITY/g"
