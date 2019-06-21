@@ -1,3 +1,7 @@
+== General ==
+* Make debugger a component that can work either in-process or out-of-process
+* Write mini-benchmarking library around that component
+
 == Useability ==
 * Enable different types of measuring (address ranges, functions)
 
@@ -9,6 +13,8 @@
 * Tracepoints (e.g. kmalloc)
 
 == Function lookup ==
-* Member functions (and therefore lambdas)
+* Member functions
+* Stateful and stateless lambda functions
+* Template functions
 * Functions in anonymous namespaces
 * Functions in dynamically loaded libraries
