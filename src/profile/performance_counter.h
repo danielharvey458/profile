@@ -41,14 +41,12 @@ namespace profile
       void enable ();
       void disable ();
 
-
       struct perf_event_attr m_pe;
       int m_fd = {};
       long m_last = {};
       long m_count = {};
       static int m_group_leader;
   };
-
 
   Event event_from_string (const std::string &event_name);
 
