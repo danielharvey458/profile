@@ -8,7 +8,7 @@ trap "rm -rf ${TEMP}" exit
 
 OUTPUT=${TEMP}/expected.log
 
-${TEST_SCRIPT} > ${OUTPUT}
+${TEST_SCRIPT} &> ${OUTPUT}
 DIFF=$(diff ${OUTPUT} ${EXPECTED})
 
 RED='\033[0;31m'
