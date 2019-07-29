@@ -39,7 +39,7 @@ namespace profile
 
       struct MeasurePoint
       {
-        Breakpoint breakpoint;
+        detail::Breakpoint breakpoint;
         std::vector<MeasuredBlock*> measured_blocks;
       };
 

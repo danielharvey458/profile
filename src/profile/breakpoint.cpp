@@ -2,7 +2,7 @@
 
 #include <sys/ptrace.h>
 
-namespace profile
+namespace profile::detail
 {
   Breakpoint::Breakpoint (pid_t pid, std::intptr_t address)
     : m_pid {pid},

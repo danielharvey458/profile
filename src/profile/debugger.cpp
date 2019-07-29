@@ -104,7 +104,7 @@ namespace profile
           address,
           MeasurePoint
           {
-            Breakpoint
+            detail::Breakpoint
             {
               m_pid, address + m_virtual_offset
             }
