@@ -38,7 +38,7 @@ namespace profile
         const auto function = std::string (spec.begin () + it + 1, spec.end ());
 
         args.profile_config.emplace_back (
-          event_from_string (event), function);
+          Event::from_string (event), function);
       }
       else if (cmd_args[idx] == "--")
       {

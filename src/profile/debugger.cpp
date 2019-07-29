@@ -181,7 +181,7 @@ namespace profile
       }
 
       std::cerr << " "
-                << event_to_string (block.counter.event ())
+                << block.counter.event ().str ()
                 << ": "
                 << std::dec
                 << block.counter.get () << std::endl;

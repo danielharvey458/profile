@@ -1,58 +1,78 @@
-#ifndef PROFILE_PERF_EVENT_H
-#define PROFILE_PERF_EVENT_H
+#ifndef PROFILE_PERFORMANCE_COUNTER_H
+#define PROFILE_PERFORMANCE_COUNTER_H
+
+#include "profile/event.h"
 
 #include <linux/perf_event.h>
-#include <unistd.h>
-
-#include <string>
-#include <tuple>
-#include <vector>
 
 namespace profile
 {
-  using Event = std::pair<unsigned, long long unsigned>;
-
+  /**
+   * PerformanceCounter counts performance events measured by
+   * perf_event_open
+   */
   struct PerformanceCounter
   {
     public:
 
+      /**
+       * Construct a counter to measure @p event on process
+       * @p pid. If @p pid is set to 0, events in the current process
+       * are measured.
+       */
       explicit PerformanceCounter (const Event &event, pid_t pid);
 
+      /**
+       * Non-copyable.
+       */
       PerformanceCounter (const PerformanceCounter &) = delete;
       PerformanceCounter &operator = (const PerformanceCounter &) = delete;
 
+      /**
+       * Move construction and assignment
+       */
       PerformanceCounter (PerformanceCounter &&);
       PerformanceCounter &operator = (PerformanceCounter &&);
 
+      /**
+       * Custom destructor to release system resources used to
+       * measure events
+       */
       ~PerformanceCounter ();
 
+      /**
+       * Start measuring the performance event.
+       */
       void start ();
 
+      /**
+       * Stop measuring the performance event.
+       */
       void stop ();
 
+      /**
+       * Reset the internal count of the event to zero
+       */
       void reset ();
 
+      /**
+       * Get the measurement for this event.
+       */
       long get () const;
 
+      /**
+       * Get the event being measured.
+       */
       Event event () const;
 
     private:
-      long read_file () const;
-      void enable ();
-      void disable ();
-
+      long read () const;
       struct perf_event_attr m_pe;
       int m_fd = {};
       long m_last = {};
       long m_count = {};
       static int m_group_leader;
   };
-
-  Event event_from_string (const std::string &event_name);
-
-  const std::string &event_to_string (const Event &event);
-
-  const std::vector<std::string> &all_event_names ();
 }
 
 #endif

@@ -115,7 +115,7 @@ TEST_DIR=tests/test_profiler
 build/tests/bin/% : $(TEST_DIR)/%.cpp build/lib/libprofile.so
 	@mkdir -p $(@D)
 	@printf "Compiling $@\n"
-	@$(CXX) $(<) $(PROFILE_TEST_CXXFLAGS) -o $(@) $(PROFILE_TEST_LDFLAGS)
+	@$(CXX) $(wildcard $(TEST_DIR)/*.cpp) $(PROFILE_TEST_CXXFLAGS) -o $(@) $(PROFILE_TEST_LDFLAGS)
 
 TEST_TARGET=build/tests/test_profiler/result.log
 TEST_TARGETS:=$(TEST_TARGETS) $(TEST_TARGET)
