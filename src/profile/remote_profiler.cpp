@@ -1,6 +1,5 @@
-#include "profile/debugger.h"
-#include "profile/tokenizer.h"
 #include "profile/registers.h"
+#include "profile/remote_profiler.h"
 
 #include <sys/ptrace.h>
 #include <sys/user.h>
@@ -14,6 +13,10 @@ namespace profile
 {
   namespace
   {
+    /*
+     * Compute the virtual offset for the address space of a given
+     * process of /proc/PID/maps
+     */
     std::intptr_t get_virtual_offset (pid_t pid)
     {
       std::ifstream stream ("/proc/" + std::to_string (pid) + "/maps");
@@ -51,44 +54,39 @@ namespace profile
     }
   }
 
-  Debugger::Debugger (std::string program_name, pid_t pid)
-    : m_program_name (std::move (program_name)),
-      m_pid (pid),
+  RemoteProfiler::RemoteProfiler (const pid_t pid)
+    : m_pid (pid),
       m_virtual_offset (get_virtual_offset (m_pid))
   {
   }
 
-  void Debugger::set_measure (const Event &event,
-                              std::intptr_t begin_address,
-                              std::intptr_t end_address,
-                              const std::string &name)
+  void RemoteProfiler::set_measure (const Event &event,
+                                    CodeBlock code_block)
   {
     const auto perf_counter_it
       = m_measured_blocks.emplace (
           m_measured_blocks.end (),
           MeasuredBlock
           {
-            begin_address,
-            end_address,
-            PerformanceCounter {event, m_pid},
-            name
+            std::move (code_block),
+            PerformanceCounter {event, m_pid}
           });
 
-    insert_measure_point (begin_address, &*perf_counter_it);
-    insert_measure_point (end_address, &*perf_counter_it);
+    insert_measure_point (perf_counter_it->code_block.start, &*perf_counter_it);
+    insert_measure_point (perf_counter_it->code_block.end, &*perf_counter_it);
   }
 
-  std::intptr_t Debugger::get_pc () const
+  std::intptr_t RemoteProfiler::get_pc () const
   {
     return get_register (m_pid, Registers::RIP);
   }
 
-  void Debugger::set_pc (const std::intptr_t pc)
+  void RemoteProfiler::set_pc (const std::intptr_t pc)
   {
     set_register (m_pid, Registers::RIP, pc);
   }
 
-  bool Debugger::wait_for_signal ()
+  bool RemoteProfiler::wait_for_signal ()
   {
     auto wait_status = 0;
     auto options = 0;
@@ -96,8 +94,8 @@ namespace profile
     return !WIFEXITED (wait_status);
   }
 
-  void Debugger::insert_measure_point (const std::intptr_t address,
-                                       MeasuredBlock *block)
+  void RemoteProfiler::insert_measure_point (const std::intptr_t address,
+                                             MeasuredBlock *block)
   {
     auto &measure_point
       = m_measure_points.emplace (
@@ -114,14 +112,14 @@ namespace profile
     measure_point.breakpoint.enable ();
   }
 
-  bool Debugger::continue_execution ()
+  bool RemoteProfiler::continue_execution ()
   {
     step_over_breakpoint ();
     ptrace (PTRACE_CONT, m_pid, nullptr, nullptr);
     return wait_for_signal ();
   }
 
-  void Debugger::step_over_breakpoint ()
+  void RemoteProfiler::step_over_breakpoint ()
   {
     const auto breakpoint = get_pc () - 1;
 
@@ -140,11 +138,11 @@ namespace profile
        */
       for (const auto block_ptr : it->second.measured_blocks)
       {
-        if (block_ptr->start == virtual_address)
+        if (block_ptr->code_block.start == virtual_address)
         {
           block_ptr->counter.start ();
         }
-        else if (block_ptr->end == virtual_address)
+        else if (block_ptr->code_block.end == virtual_address)
         {
           block_ptr->counter.stop ();
         }
@@ -161,23 +159,26 @@ namespace profile
     }
   }
 
-  void Debugger::run ()
+  void RemoteProfiler::run ()
   {
     while (continue_execution ()) {}
 
+    /*
+     * TODO - return information
+     */
     for (const auto &block : m_measured_blocks)
     {
       std::cerr << std::hex;
 
-      if (!block.name.empty ())
+      if (!block.code_block.name.empty ())
       {
-        std::cerr << block.name;
+        std::cerr << block.code_block.name;
       }
       else
       {
-        std::cerr << "0x" << block.start
+        std::cerr << "0x" << block.code_block.start
                   << "--"
-                  << "0x" << block.end;
+                  << "0x" << block.code_block.end;
       }
 
       std::cerr << " "

@@ -1,3 +1,4 @@
+#include "profile/exception.h"
 #include "profile/registers.h"
 
 #include <algorithm>
@@ -6,7 +7,7 @@ namespace profile
 {
   namespace
   {
-    const Registers::DescriptorTable register_descriptors
+    const Registers::storage register_descriptors
     {{
       {Registers::R15, 15, "r15"},
       {Registers::R14, 14, "r14"},
@@ -48,20 +49,23 @@ namespace profile
     return register_descriptors.end ();
   }
 
-  Registers::const_iterator Registers::from_name (const std::string &name)
+  Registers::const_iterator
+  Registers::from_name (const std::string &name)
   {
     const auto pred = [&name] (const auto &d) {return d.name == name;};
     return std::find_if (begin (), end (), pred);
   }
 
-  Registers::const_iterator Registers::from_dwarf_register (const int dwarf_register)
+  Registers::const_iterator
+  Registers::from_dwarf_register (const int dwarf_register)
   {
     const auto pred = [dwarf_register] (const auto &d) {
                         return d.dwarf_register == dwarf_register;};
     return std::find_if (begin (), end (), pred);
   }
 
-  Registers::const_iterator Registers::from_register (const Register reg)
+  Registers::const_iterator
+  Registers::from_register (const Register reg)
   {
     const auto pred = [reg] (const auto &d) {return d.reg == reg;};
     return std::find_if (begin (), end (), pred);
@@ -69,15 +73,19 @@ namespace profile
 
   uint64_t *
   Registers::lookup_user_regs (user_regs_struct &regs,
-                               const_iterator it)
+                               const const_iterator it)
   {
-    return reinterpret_cast<uint64_t*> (&regs) + std::distance (begin (), it);
+    ASSERT (it != end (), "end iterator passed to lookup_user_regs");
+    return reinterpret_cast<uint64_t*> (&regs)
+             + std::distance (begin (), it);
   }
 
   const uint64_t *
   Registers::lookup_user_regs (const user_regs_struct &regs,
-                               const_iterator it)
+                               const const_iterator it)
   {
-    return reinterpret_cast<const uint64_t*> (&regs) + std::distance (begin (), it);
+    ASSERT (it != end (), "end iterator passed to lookup_user_regs");
+    return reinterpret_cast<const uint64_t*> (&regs)
+             + std::distance (begin (), it);
   }
 }

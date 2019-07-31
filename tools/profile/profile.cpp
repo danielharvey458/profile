@@ -1,6 +1,6 @@
-#include "profile/debugger.h"
 #include "profile/elf_parser.h"
 #include "profile/performance_counter.h"
+#include "profile/remote_profiler.h"
 
 #include "elf++.hh"
 #include "dwarf++.hh"
@@ -79,7 +79,7 @@ int main (int argc, char **argv)
   }
   else if (pid >= 1)
   {
-    auto dbg = Debugger (executable, pid);
+    auto remote = RemoteProfiler (pid);
     const auto fd = open (executable, O_RDONLY);
     const auto e = elf::elf (elf::create_mmap_loader (fd));
     const auto dw = dwarf::dwarf (dwarf::elf::create_loader (e));
@@ -97,8 +97,11 @@ int main (int argc, char **argv)
         return EXIT_FAILURE;
       }
 
-      dbg.set_measure (event, opt->first, opt->second, function);
+      auto code_block
+        = RemoteProfiler::CodeBlock {function, opt->first, opt->second};
+
+      remote.set_measure (event, std::move (code_block));
     }
-    dbg.run ();
+    remote.run ();
   }
 }
