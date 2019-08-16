@@ -6,7 +6,6 @@
 * Enable different types of measuring (address ranges, functions)
 
 == Infrastructure ==
-* Use ninja build system?
 * Testing as much as possible
 
 == Features ==
