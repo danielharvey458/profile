@@ -127,3 +127,16 @@ add_test (
   ${PROJECT_SOURCE_DIR}/tests/test_tool_regression/test_tool_regression.sh
   ${PROJECT_SOURCE_DIR}/tests/test_tool_regression/expected.log
 )
+
+##########################################################################
+# Copyright test
+##########################################################################
+
+
+add_test (
+  NAME test_copyright
+  COMMAND
+  ${CMAKE_COMMAND} -E env
+  PROJECT_ROOT=${PROJECT_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/tests/test_copyright/test_copyright.sh
+)
