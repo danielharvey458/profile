@@ -2,12 +2,6 @@
 * Make debugger a component that can work either in-process or out-of-process
 * Write mini-benchmarking library around that component
 
-== Useability ==
-* Enable different types of measuring (address ranges, functions)
-
-== Infrastructure ==
-* Testing as much as possible
-
 == Features ==
 * Tracepoints (e.g. kmalloc)
 
