@@ -17,6 +17,7 @@
 #define BOOST_TEST_MODULE test_profiler
 
 #include "profile/performance_counter.h"
+#include "profile/do_not_optimize.h"
 
 #include <boost/test/included/unit_test.hpp>
 

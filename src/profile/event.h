@@ -78,6 +78,11 @@ namespace profile
    * Compare event for inequality
    */
   bool operator != (Event lhs, Event rhs);
+
+  /**
+   * Order events lexicographically on event type and event
+   */
+  bool operator < (Event lhs, Event rhs);
 }
 
 #include "profile/event.inl"

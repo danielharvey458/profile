@@ -132,7 +132,6 @@ add_test (
 # Copyright test
 ##########################################################################
 
-
 add_test (
   NAME test_copyright
   COMMAND
@@ -140,3 +139,28 @@ add_test (
   PROJECT_ROOT=${PROJECT_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/tests/test_copyright/test_copyright.sh
 )
+
+##########################################################################
+# Samples
+##########################################################################
+
+file (
+  GLOB
+  SAMPLE_SOURCES
+  "samples/*/*.cpp"
+)
+
+foreach (file ${SAMPLE_SOURCES})
+  get_filename_component (EXECUTABLE ${file} NAME_WE)
+  add_executable (${EXECUTABLE} ${file})
+  set_target_properties (
+    ${EXECUTABLE}
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/samples
+  )
+  target_link_libraries (
+    ${EXECUTABLE} libprofile libelf++ libdwarf++
+)
+
+
+endforeach ()

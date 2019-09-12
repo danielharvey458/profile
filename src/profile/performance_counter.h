@@ -36,7 +36,7 @@ namespace profile
        * @p pid. If @p pid is set to 0, events in the current process
        * are measured.
        */
-      explicit PerformanceCounter (const Event &event, pid_t pid);
+      explicit PerformanceCounter (const Event &event, pid_t pid = 0);
 
       /**
        * Non-copyable.
